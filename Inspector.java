@@ -10,25 +10,49 @@ public class Inspector {
 
     private void inspectClass(Class c, Object obj, boolean recursive, int depth) {
 		//Declaring class
-		System.out.print("1. " + c.getName() + "\n");
+		System.out.print(Modifier.toString(c.getModifiers()) + " " + c.getName());
 		
 		//interfaces
+		boolean loop_start = true;
 		for(Class enterface : c.getInterfaces()) {
-			System.out.print(enterface + "\n");
+			if(loop_start) {
+				System.out.print(" implements ");
+			} else {
+				System.out.print(", ");
+			}
+			System.out.print(enterface.getName());
+			loop_start = false;
 		}
+		System.out.print("\n");
 		
 		//methods
 		for(Method method : c.getMethods()) {
-			String tmp = method.getName() + "(";
-			boolean put_comma = false;
+			//name, modifiers, return type
+			String tmp = "\t" + Modifier.toString(method.getModifiers()) + " " + method.getReturnType().getName() + " " + method.getName() + "(";
+			
+			//parameters
+			loop_start = true;
 			for(Class parameter : method.getParameterTypes()) {
-				if(put_comma) {
+				if(!loop_start) {
 					tmp += ", ";
 				}
 				tmp += parameter.getName();
-				put_comma = true;
+				loop_start = false;
 			}
-			System.out.print(tmp + ")\n");
+			tmp += ")";
+			
+			//exceptions
+			loop_start = true;
+			for(Class eggception : method.getExceptionTypes()) {
+				if(!loop_start) {
+					tmp += ", ";
+				} else {
+					tmp += " throws ";
+				}
+				tmp += eggception.getName();
+				loop_start = false;
+			}
+			System.out.print(tmp + "\n");
 		}
     }
 
