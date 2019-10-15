@@ -23,6 +23,37 @@ public class Inspector {
 			System.out.print(enterface.getName());
 			loop_start = false;
 		}
+		
+		if(c.getSuperclass() != null) {
+			System.out.print(" extends " + c.getSuperclass().getName());
+		}
+		System.out.print("\n");
+		
+		//fields
+		for(Field f : c.getFields()) {
+			try {
+				Object field = f.get(obj);
+				System.out.print("\t" + Modifier.toString(f.getModifiers()) + " " + f.getType() + " " + f.getName() + " = " + field);
+			} catch(Exception e) {
+				System.out.print("\t" + Modifier.toString(f.getModifiers()) + " " + f.getType() + " " + f.getName());
+			}
+			System.out.print("\n");
+		}
+		System.out.print("\n");
+		
+		//constructors
+		for(Constructor t : c.getDeclaredConstructors()) {
+			System.out.print("\t" + Modifier.toString(t.getModifiers()) + " " + t.getName() + "(");
+			loop_start = true;
+			for(Class parameter : t.getParameterTypes()) {
+				if(!loop_start) {
+					System.out.print(", ");
+				}
+				System.out.print(parameter.getName());
+				loop_start = false;
+			}
+			System.out.print(")\n");
+		}
 		System.out.print("\n");
 		
 		//methods
@@ -54,13 +85,34 @@ public class Inspector {
 			}
 			System.out.print(tmp + "\n");
 		}
+		System.out.print("\n");
+		
+		//recursivly print superclasses and interfaces
+		if((recursive || depth == 0) && !c.getName().equals("java.lang.Object")) {
+			this.inspectClass(c.getSuperclass(), obj, recursive, depth+1);
+			
+			//recursivly checks out interfaces
+			//TODO: Fix this. currently broken
+			for(Class enterface : c.getInterfaces()) {
+				this.inspectClass(enterface, obj, recursive, depth+1);
+			}
+		}
+		
+		
     }
 
+	/**
+	 * A test method which recursively prints out a class
+	 * 
+	 * @param args[]	the name of the class
+	 */
 	public static void main(String args[]) {
 		try {
 			new Inspector().inspect(Class.forName(args[0]).newInstance(), true);
+		} catch(NullPointerException e) {
+			e.printStackTrace();
 		} catch(Exception e) {
-			System.out.print("Class not found\n");
+			System.out.print("Could not find class\n");
 		}
 	}
 
