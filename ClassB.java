@@ -1,7 +1,7 @@
 
 public class ClassB extends ClassC implements Runnable {
 
-    public ClassA val = new ClassA();
+    private ClassA val = new ClassA();
     private ClassA val2 = new ClassA(12);
     private ClassA val3;
 

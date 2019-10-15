@@ -1,5 +1,6 @@
 
 import java.lang.reflect.*;
+import java.util.*;
 
 public class Inspector {
 
@@ -9,6 +10,8 @@ public class Inspector {
     }
 
     private void inspectClass(Class c, Object obj, boolean recursive, int depth) {
+		ArrayList<Object> explore = new ArrayList<Object>();
+		
 		//Declaring class
 		System.out.print(Modifier.toString(c.getModifiers()) + " " + c.getName());
 		
@@ -30,7 +33,7 @@ public class Inspector {
 		System.out.print("\n");
 		
 		//fields
-		for(Field f : c.getFields()) {
+		for(Field f : c.getDeclaredFields()) {
 			try {
 				Object field = f.get(obj);
 				System.out.print("\t" + Modifier.toString(f.getModifiers()) + " " + f.getType() + " " + f.getName() + " = " + field);
@@ -39,7 +42,9 @@ public class Inspector {
 			}
 			System.out.print("\n");
 		}
-		System.out.print("\n");
+		if(c.getDeclaredFields().length != 0) {
+			System.out.print("\n");
+		}
 		
 		//constructors
 		for(Constructor t : c.getDeclaredConstructors()) {
@@ -54,10 +59,12 @@ public class Inspector {
 			}
 			System.out.print(")\n");
 		}
-		System.out.print("\n");
+		if(c.getDeclaredConstructors().length != 0) {
+			System.out.print("\n");
+		}
 		
 		//methods
-		for(Method method : c.getMethods()) {
+		for(Method method : c.getDeclaredMethods()) {
 			//name, modifiers, return type
 			String tmp = "\t" + Modifier.toString(method.getModifiers()) + " " + method.getReturnType().getName() + " " + method.getName() + "(";
 			
@@ -87,18 +94,17 @@ public class Inspector {
 		}
 		System.out.print("\n");
 		
-		//recursivly print superclasses and interfaces
-		if((recursive || depth == 0) && !c.getName().equals("java.lang.Object")) {
+		//recursivly print superclasses
+		if((recursive || depth == 0) && c.getSuperclass() != null) {
 			this.inspectClass(c.getSuperclass(), obj, recursive, depth+1);
-			
-			//recursivly checks out interfaces
-			//TODO: Fix this. currently broken
-			for(Class enterface : c.getInterfaces()) {
-				this.inspectClass(enterface, obj, recursive, depth+1);
-			}
 		}
 		
-		
+		//recursivly checks out interfaces
+		if((recursive || depth == 0)) {
+			for(Class enterface : c.getInterfaces()) {
+				this.inspectClass(enterface, obj, true, depth+1);
+			}
+		}
     }
 
 	/**

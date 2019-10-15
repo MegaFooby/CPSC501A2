@@ -1,9 +1,9 @@
 
 public final class ClassA implements java.io.Serializable, Runnable {
 
-    public int val = 3;
-    public double val2 = 0.2;
-    public boolean val3 = true;
+    private int val = 3;
+    private double val2 = 0.2;
+    private boolean val3 = true;
 
     public ClassA() {
         val = 3;
