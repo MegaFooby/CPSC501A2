@@ -6,6 +6,8 @@ public class Inspector {
 	
 	private ArrayList<Object> explore = new ArrayList<Object>();
     
+    public static final boolean RECURSIVELY_EXPLORE_OBJECTS = false;
+    
     public void inspect(Object obj, boolean recursive) {
         Class c = obj.getClass();
         inspectClass(c, obj, recursive, 0);
@@ -31,6 +33,12 @@ public class Inspector {
 		}
 		
 		System.out.print("\n");
+		
+		if(recursive) {
+			for(Object o : explore) {
+				inspect(o, RECURSIVELY_EXPLORE_OBJECTS);
+			}
+		}
 		
 		//recursivly print superclasses
 		if((recursive || depth == 0) && c.getSuperclass() != null) {
@@ -72,19 +80,80 @@ public class Inspector {
 		System.out.print("\n");
 	}
 	
+	/**
+	 * Prints all fields and values if public
+	 * 
+	 * @param c	The class to print
+	 * @param obj	The object with the values
+	 */
 	public void print_fields(Class c, Object obj) {
 		//fields
-		for(Field f : c.getDeclaredFields()) {
+		/*for(Field f : c.getDeclaredFields()) {
 			try {
 				Object field = f.get(obj);
 				System.out.print("\t" + Modifier.toString(f.getModifiers()) + " " + f.getType() + " " + f.getName() + " = " + field);
-			} catch(Exception e) {
+			} catch(IllegalArgumentException | IllegalAccessException e) {
 				System.out.print("\t" + Modifier.toString(f.getModifiers()) + " " + f.getType() + " " + f.getName());
+			}
+			System.out.print("\n");
+		}*/
+		
+		
+		for(Field f : c.getDeclaredFields()) {
+			System.out.print("\t" + Modifier.toString(f.getModifiers()) + " ");
+			if(f.getType().getName().charAt(0) == '[') {
+				int depth = 0;
+				for(depth = 0; depth < f.getType().getName().length(); depth++) {
+					if(f.getType().getName().charAt(depth) != '[') {
+						break;
+					}
+				}
+				switch(f.getType().getName().charAt(depth)) {
+					case 'B':
+					System.out.print("byte");
+					break;
+					case 'C':
+					System.out.print("char");
+					break;
+					case 'D':
+					System.out.print("double");
+					break;
+					case 'F':
+					System.out.print("float");
+					break;
+					case 'I':
+					System.out.print("int");
+					break;
+					case 'J':
+					System.out.print("long");
+					break;
+					case 'L':
+					System.out.print("reference type");
+					break;
+					case 'S':
+					System.out.print("short");
+					break;
+					case 'Z':
+					System.out.print("boolean");
+					break;
+				}
+			} else {
+				try {
+					Object field = f.get(obj);
+					System.out.print(f.getType() + " " + f.getName() + " = " + field);
+				} catch(IllegalArgumentException | IllegalAccessException e) {
+					System.out.print(f.getType() + " " + f.getName());
+				}
 			}
 			System.out.print("\n");
 		}
 	}
 	
+	/**
+	 * Prints all constructors
+	 * 
+	 * @param c	The class to print
+	 */
 	public void print_constructors(Class c) {
 		//constructors
 		for(Constructor t : c.getDeclaredConstructors()) {
@@ -101,6 +170,11 @@ public class Inspector {
 		}
 	}
 	
+	/**
+	 * Prints all methods from a class
+	 * 
+	 * @param c	The class to print
+	 */
 	public void print_methods(Class c) {
 		//methods
 		for(Method method : c.getDeclaredMethods()) {
