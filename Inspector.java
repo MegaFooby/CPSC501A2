@@ -5,6 +5,7 @@ import java.util.*;
 public class Inspector {
 	
 	private ArrayList<Object> explore = new ArrayList<Object>();
+	//public HashMap<Class, integer> seen = new HashMap<Class, integer>();
     
     public static final boolean RECURSIVELY_EXPLORE_OBJECTS = false;
     
@@ -14,6 +15,12 @@ public class Inspector {
     }
 
     private void inspectClass(Class c, Object obj, boolean recursive, int depth) {
+		
+		/*if(seen.containsKey(c)) {
+			seen.get(c).i++;
+		} else {
+			seen.put(c, new integer(1));
+		}*/
 		
 		this.print_title(c);
 		
@@ -34,12 +41,6 @@ public class Inspector {
 		
 		System.out.print("\n");
 		
-		if(recursive) {
-			for(Object o : explore) {
-				inspect(o, RECURSIVELY_EXPLORE_OBJECTS);
-			}
-		}
-		
 		//recursivly print superclasses
 		if((recursive || depth == 0) && c.getSuperclass() != null) {
 			this.inspectClass(c.getSuperclass(), obj, recursive, depth+1);
@@ -49,6 +50,17 @@ public class Inspector {
 		if((recursive || depth == 0)) {
 			for(Class enterface : c.getInterfaces()) {
 				this.inspectClass(enterface, obj, true, depth+1);
+			}
+		}
+		
+		if(recursive && depth == 0) {
+			//for(Object o : explore) {
+			for(int i = 0; i < explore.size(); i++) {
+				Object o = explore.get(i);
+				//System.out.print(explore.size() + "\n");
+				Class cls = o.getClass();
+				inspectClass(cls, o, RECURSIVELY_EXPLORE_OBJECTS, depth+1);
+				//inspect(o, RECURSIVELY_EXPLORE_OBJECTS);
 			}
 		}
     }
@@ -80,6 +92,53 @@ public class Inspector {
 		System.out.print("\n");
 	}
 	
+	public String format_class_name(Class c) {
+		String ret = "";
+		if(c.getName().charAt(0) == '[') {
+			int depth = 0;
+			for(depth = 0; depth < c.getName().length(); depth++) {
+				if(c.getName().charAt(depth) != '[') {
+					break;
+				}
+			}
+			switch(c.getName().charAt(depth)) {
+			case 'B':
+				ret += "byte";
+				break;
+			case 'C':
+				ret += "char";
+				break;
+			case 'D':
+				ret += "double";
+				break;
+			case 'F':
+				ret += "float";
+				break;
+			case 'I':
+				ret += "int";
+				break;
+			case 'J':
+				ret += "long";
+				break;
+			case 'L':
+				ret += c.getName().substring(depth+1, c.getName().length()-1);
+				break;
+			case 'S':
+				ret += "short";
+				break;
+			case 'Z':
+				ret += "boolean";
+				break;
+			}
+			for(int i = 0; i < depth; i++) {
+				ret += "[]";
+			}
+			return ret;
+		} else {
+			return c.getName();
+		}
+	}
+	
 	/**
 	 * Prints all fields and values if public
 	 * 
@@ -88,64 +147,36 @@ public class Inspector {
 	 */
 	public void print_fields(Class c, Object obj) {
 		//fields
-		/*for(Field f : c.getDeclaredFields()) {
-			try {
-				Object field = f.get(obj);
-				System.out.print("\t" + Modifier.toString(f.getModifiers()) + " " + f.getType() + " " + f.getName() + " = " + field);
-			} catch(IllegalArgumentException | IllegalAccessException e) {
-				System.out.print("\t" + Modifier.toString(f.getModifiers()) + " " + f.getType() + " " + f.getName());
-			}
-			System.out.print("\n");
-		}*/
-		
-		
 		for(Field f : c.getDeclaredFields()) {
 			System.out.print("\t" + Modifier.toString(f.getModifiers()) + " ");
 			if(f.getType().getName().charAt(0) == '[') {
-				int depth = 0;
-				for(depth = 0; depth < f.getType().getName().length(); depth++) {
-					if(f.getType().getName().charAt(depth) != '[') {
-						break;
-					}
-				}
-				switch(f.getType().getName().charAt(depth)) {
-					case 'B':
-					System.out.print("byte");
-					break;
-					case 'C':
-					System.out.print("char");
-					break;
-					case 'D':
-					System.out.print("double");
-					break;
-					case 'F':
-					System.out.print("float");
-					break;
-					case 'I':
-					System.out.print("int");
-					break;
-					case 'J':
-					System.out.print("long");
-					break;
-					case 'L':
-					System.out.print("reference type");
-					break;
-					case 'S':
-					System.out.print("short");
-					break;
-					case 'Z':
-					System.out.print("boolean");
-					break;
-				}
+				System.out.print(this.format_class_name(f.getType()));
+				System.out.print(" = 0x" + String.format("%08x", f.hashCode()));
 			} else {
 				try {
 					Object field = f.get(obj);
-					System.out.print(f.getType() + " " + f.getName() + " = " + field);
-				} catch(IllegalArgumentException | IllegalAccessException e) {
+					System.out.print(f.getType() + " " + f.getName() + " = " + field.toString());
+				} catch(IllegalArgumentException | IllegalAccessException | NullPointerException e) {
 					System.out.print(f.getType() + " " + f.getName());
 				}
 			}
 			System.out.print("\n");
+			try {
+				this.add_objects(f.get(obj));
+			} catch(IllegalAccessException e) {}
+		}
+	}
+	
+	public void add_objects(Object obj) {
+		if(obj == null) return;
+		if(obj.getClass().isArray()) {
+			for(int i = 0; i < Array.getLength(obj); i++) {
+				this.add_objects(Array.get(obj, i));
+			}
+		} else {
+			if(obj != null) {
+				explore.add(obj);
+			}
 		}
 	}
 	
@@ -163,7 +194,7 @@ public class Inspector {
 				if(!loop_start) {
 					System.out.print(", ");
 				}
-				System.out.print(parameter.getName());
+				System.out.print(this.format_class_name(parameter));
 				loop_start = false;
 			}
 			System.out.print(")\n");
@@ -187,7 +218,7 @@ public class Inspector {
 				if(!loop_start) {
 					System.out.print(", ");
 				}
-				System.out.print(parameter.getName());
+				System.out.print(this.format_class_name(parameter));
 				loop_start = false;
 			}
 			System.out.print(")");
@@ -218,8 +249,16 @@ public class Inspector {
 		} catch(NullPointerException e) {
 			e.printStackTrace();
 		} catch(Exception e) {
-			System.out.print("Could not find class\n");
+			e.printStackTrace();
+			//System.out.print("Could not find class\n");
 		}
 	}
 
+}
+
+class integer {
+	public int i;
+	public integer(int i) {
+		this.i = i;
+	}
 }

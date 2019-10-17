@@ -1,8 +1,8 @@
 
 public class ClassD {
 
-    private ClassA val = new ClassA(17);
-    private static ClassA val2;
+    public ClassA val = new ClassA(17);
+    public static ClassA val2;
     public int val3 = 34;
     public ClassA[] vallarray = new ClassA[10];
 
