@@ -5,9 +5,6 @@ import java.util.*;
 public class Inspector {
 	
 	private ArrayList<Object> explore = new ArrayList<Object>();
-	//public HashMap<Class, integer> seen = new HashMap<Class, integer>();
-    
-    public static final boolean RECURSIVELY_EXPLORE_OBJECTS = false;
     
     public void inspect(Object obj, boolean recursive) {
         Class c = obj.getClass();
@@ -27,7 +24,7 @@ public class Inspector {
 		//System.out.print("\t0x" + String.format("%08x", obj.hashCode()) + "\n");
 		
 		if(c.getDeclaredFields().length != 0) {
-			this.print_fields(c, obj);
+			this.print_fields(c, obj, true);
 			System.out.print("\n");
 		}
 		
@@ -37,23 +34,12 @@ public class Inspector {
 		}
 		
 		if(c.getDeclaredMethods().length != 0) {
-			this.print_methods(c);
+			this.print_methods(c, true);
 			System.out.print("\n");
 		}
 		
 		System.out.print("\n");
 		
-		//recursivly print superclasses
-		if((recursive || depth == 0) && c.getSuperclass() != null) {
-			this.inspectClass(c.getSuperclass(), obj, recursive, depth+1);
-		}
-		
-		//recursivly checks out interfaces
-		if((recursive || depth == 0)) {
-			for(Class enterface : c.getInterfaces()) {
-				this.inspectClass(enterface, obj, true, depth+1);
-			}
-		}
 		
 		if(recursive && depth == 0) {
 			//for(Object o : explore) {
@@ -152,12 +138,13 @@ public class Inspector {
 	 * @param c	The class to print
 	 * @param obj	The object with the values
 	 */
-	public void print_fields(Class c, Object obj) {
+	public void print_fields(Class c, Object obj, boolean initial_run) {
 		//fields
 		for(Field f : c.getDeclaredFields()) {
+			if(!initial_run && Modifier.isPrivate(f.getModifiers())) continue;
 			System.out.print("\t" + Modifier.toString(f.getModifiers()) + " ");
 			if(!f.getType().isPrimitive()) {
-				System.out.print(this.format_class_name(f.getType()));
+				System.out.print(this.format_class_name(f.getType()) + " " + f.getName());
 				try {
 					Object field = f.get(obj);
 					System.out.print(" = " + format_class_name(field.getClass()) + "@" + String.format("%08x", field.hashCode()));
@@ -178,6 +165,16 @@ public class Inspector {
 			try {
 				this.add_objects(f.get(obj));
 			} catch(IllegalAccessException e) {}
+		}
+		
+		//recursivly print superclasses
+		if(c.getSuperclass() != null) {
+			this.print_fields(c.getSuperclass(), obj, false);
+		}
+		
+		//recursivly checks out interfaces
+		for(Class enterface : c.getInterfaces()) {
+			this.print_fields(enterface, obj, false);
 		}
 	}
 	
@@ -220,9 +217,10 @@ public class Inspector {
 	 * 
 	 * @param c	The class to print
 	 */
-	public void print_methods(Class c) {
+	public void print_methods(Class c, boolean initial_run) {
 		//methods
 		for(Method method : c.getDeclaredMethods()) {
+			if(!initial_run && Modifier.isPrivate(method.getModifiers())) continue;
 			//name, modifiers, return type
 			System.out.print("\t" + Modifier.toString(method.getModifiers()) + " " + method.getReturnType().getName() + " " + method.getName() + "(");
 			
@@ -249,6 +247,15 @@ public class Inspector {
 				loop_start = false;
 			}
 			System.out.print("\n");
+		}
+		//recursivly print superclasses
+		if(c.getSuperclass() != null) {
+			this.print_methods(c.getSuperclass(), false);
+		}
+		
+		//recursivly checks out interfaces
+		for(Class enterface : c.getInterfaces()) {
+			this.print_methods(enterface, false);
 		}
 	}
 
