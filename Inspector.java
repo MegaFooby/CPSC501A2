@@ -24,6 +24,8 @@ public class Inspector {
 		
 		this.print_title(c);
 		
+		//System.out.print("\t0x" + String.format("%08x", obj.hashCode()) + "\n");
+		
 		if(c.getDeclaredFields().length != 0) {
 			this.print_fields(c, obj);
 			System.out.print("\n");
@@ -59,10 +61,10 @@ public class Inspector {
 				Object o = explore.get(i);
 				//System.out.print(explore.size() + "\n");
 				Class cls = o.getClass();
-				inspectClass(cls, o, RECURSIVELY_EXPLORE_OBJECTS, depth+1);
-				//inspect(o, RECURSIVELY_EXPLORE_OBJECTS);
+				inspectClass(cls, o, recursive, depth+1);
 			}
 		}
+		//System.out.print(explore.size() + "\n");
     }
     
     /**
@@ -72,7 +74,12 @@ public class Inspector {
      */
     public void print_title(Class c) {
 		//Declaring class
-		System.out.print(Modifier.toString(c.getModifiers()) + " " + c.getName());
+		System.out.print(Modifier.toString(c.getModifiers()) + " ");
+		if(c.isInterface()) {//if I just do toString, "interface" prints twice
+			System.out.print(c.getName());
+		} else {
+			System.out.print(c.toString());
+		}
 		
 		//interfaces
 		boolean loop_start = true;
@@ -151,7 +158,12 @@ public class Inspector {
 			System.out.print("\t" + Modifier.toString(f.getModifiers()) + " ");
 			if(!f.getType().isPrimitive()) {
 				System.out.print(this.format_class_name(f.getType()));
-				System.out.print(" = 0x" + String.format("%08x", f.hashCode()));
+				try {
+					Object field = f.get(obj);
+					System.out.print(" = " + format_class_name(field.getClass()) + "@" + String.format("%08x", field.hashCode()));
+				} catch(NullPointerException e) {
+					System.out.print(" = null");
+				} catch(IllegalArgumentException | IllegalAccessException e) {}
 			} else {
 				System.out.print(f.getType() + " " + f.getName());
 				try {
@@ -159,9 +171,7 @@ public class Inspector {
 					System.out.print(" = " + field.toString());
 				} catch(NullPointerException e) {
 					System.out.print(" = null");
-				} catch(IllegalArgumentException | IllegalAccessException e) {
-					//System.out.print(f.getType() + " " + f.getName());
-				}
+				} catch(IllegalArgumentException | IllegalAccessException e) {}
 			}
 			System.out.print("\n");
 			if(f.getType().isPrimitive()) continue;
