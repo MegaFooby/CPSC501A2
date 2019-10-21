@@ -149,18 +149,22 @@ public class Inspector {
 		//fields
 		for(Field f : c.getDeclaredFields()) {
 			System.out.print("\t" + Modifier.toString(f.getModifiers()) + " ");
-			if(f.getType().getName().charAt(0) == '[') {
+			if(!f.getType().isPrimitive()) {
 				System.out.print(this.format_class_name(f.getType()));
 				System.out.print(" = 0x" + String.format("%08x", f.hashCode()));
 			} else {
+				System.out.print(f.getType() + " " + f.getName());
 				try {
 					Object field = f.get(obj);
-					System.out.print(f.getType() + " " + f.getName() + " = " + field.toString());
-				} catch(IllegalArgumentException | IllegalAccessException | NullPointerException e) {
-					System.out.print(f.getType() + " " + f.getName());
+					System.out.print(" = " + field.toString());
+				} catch(NullPointerException e) {
+					System.out.print(" = null");
+				} catch(IllegalArgumentException | IllegalAccessException e) {
+					//System.out.print(f.getType() + " " + f.getName());
 				}
 			}
 			System.out.print("\n");
+			if(f.getType().isPrimitive()) continue;
 			try {
 				this.add_objects(f.get(obj));
 			} catch(IllegalAccessException e) {}
