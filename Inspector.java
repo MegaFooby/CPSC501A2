@@ -3,8 +3,6 @@ import java.lang.reflect.*;
 import java.util.*;
 
 public class Inspector {
-	
-	private ArrayList<Object> explore = new ArrayList<Object>();
     
     public void inspect(Object obj, boolean recursive) {
         Class c = obj.getClass();
@@ -13,44 +11,48 @@ public class Inspector {
 
     private void inspectClass(Class c, Object obj, boolean recursive, int depth) {
 		
-		/*if(seen.containsKey(c)) {
-			seen.get(c).i++;
-		} else {
-			seen.put(c, new integer(1));
-		}*/
-		
-		this.print_title(c);
+		this.print_title(c, obj, depth);
 		
 		//System.out.print("\t0x" + String.format("%08x", obj.hashCode()) + "\n");
 		
 		if(c.getDeclaredFields().length != 0) {
-			this.print_fields(c, obj, true);
+			for(int  i = 0; i < depth; i++) {
+				System.out.print("\t");
+			}
+			System.out.print("Fields:\n");
+			this.print_fields(c, obj, depth, recursive);
 			System.out.print("\n");
 		}
 		
 		if(c.getDeclaredConstructors().length != 0) {
-			this.print_constructors(c);
+			for(int  i = 0; i < depth; i++) {
+				System.out.print("\t");
+			}
+			System.out.print("Constructors:\n");
+			this.print_constructors(c, depth);
 			System.out.print("\n");
 		}
 		
 		if(c.getDeclaredMethods().length != 0) {
-			this.print_methods(c, true);
+			for(int  i = 0; i < depth; i++) {
+				System.out.print("\t");
+			}
+			System.out.print("Methods:\n");
+			this.print_methods(c, depth);
 			System.out.print("\n");
 		}
 		
-		System.out.print("\n");
-		
-		
-		if(recursive && depth == 0) {
-			//for(Object o : explore) {
-			for(int i = 0; i < explore.size(); i++) {
-				Object o = explore.get(i);
-				//System.out.print(explore.size() + "\n");
-				Class cls = o.getClass();
-				inspectClass(cls, o, recursive, depth+1);
-			}
+		//recursivly print superclasses
+		if(c.getSuperclass() != null) {
+			this.inspectClass(c.getSuperclass(), obj, recursive, depth+1);
 		}
-		//System.out.print(explore.size() + "\n");
+		
+		//recursivly checks out interfaces
+		for(Class enterface : c.getInterfaces()) {
+			this.inspectClass(enterface, obj, recursive, depth+1);
+		}
+		
+		System.out.print("\n");
     }
     
     /**
@@ -58,15 +60,18 @@ public class Inspector {
      * 
      * @param c	The class to inspect
      */
-    public void print_title(Class c) {
+    public void print_title(Class c, Object obj, int depth) {
 		//Declaring class
+		for(int  i = 0; i < depth; i++) {
+			System.out.print("\t");
+		}
 		System.out.print(Modifier.toString(c.getModifiers()) + " ");
 		if(c.isInterface()) {//if I just do toString, "interface" prints twice
 			System.out.print(c.getName());
 		} else {
 			System.out.print(c.toString());
 		}
-		
+		System.out.print("@" + String.format("%08x", obj.hashCode()));
 		//interfaces
 		boolean loop_start = true;
 		for(Class enterface : c.getInterfaces()) {
@@ -85,7 +90,7 @@ public class Inspector {
 		System.out.print("\n");
 	}
 	
-	public String format_class_name(Class c) {
+	public String format_class_name(Class c, integer array_depth) {
 		String ret = "";
 		if(c.getName().charAt(0) == '[') {
 			int depth = 0;
@@ -123,13 +128,37 @@ public class Inspector {
 				ret += "boolean";
 				break;
 			}
-			for(int i = 0; i < depth; i++) {
+			/*for(int i = 0; i < depth; i++) {
 				ret += "[]";
-			}
+			}*/
+			array_depth.i = depth;
 			return ret;
 		} else {
 			return c.getName();
 		}
+	}
+	
+	public void print_array(Object obj, int depth, boolean recursive) {
+		try {
+			for(int i = 0; i < Array.getLength(obj); i++) {
+				for(int j = 0; j < depth; j++) {
+					System.out.print("\t");
+				}
+				try {
+					Object element = Array.get(obj, i);
+					if(element.getClass().isPrimitive()) {
+						System.out.print(element + "\n");
+					} else {
+						System.out.print(element.getClass().getName() + "@" + String.format("%08x", element.hashCode()) + "\n");
+						if(recursive) {
+							inspectClass(element.getClass(), element, recursive, depth+1);
+						}
+					}
+				} catch(NullPointerException e) {
+					System.out.print("null\n");
+				}
+			}
+		} catch(IllegalArgumentException e) {}
 	}
 	
 	/**
@@ -138,55 +167,47 @@ public class Inspector {
 	 * @param c	The class to print
 	 * @param obj	The object with the values
 	 */
-	public void print_fields(Class c, Object obj, boolean initial_run) {
+	public void print_fields(Class c, Object obj, int depth, boolean recursive) {
 		//fields
 		for(Field f : c.getDeclaredFields()) {
-			if(!initial_run && Modifier.isPrivate(f.getModifiers())) continue;
-			System.out.print("\t" + Modifier.toString(f.getModifiers()) + " ");
+			for(int  i = 0; i < depth; i++) {
+				System.out.print("\t");
+			}
+			System.out.print(Modifier.toString(f.getModifiers()) + " ");
 			if(!f.getType().isPrimitive()) {
-				System.out.print(this.format_class_name(f.getType()) + " " + f.getName());
+				integer array_depth = new integer(0);
+				System.out.print(this.format_class_name(f.getType(), array_depth));
+				for(int i = 0; i < array_depth.i; i++) {
+					System.out.print("[]");
+				}
+				System.out.print(" " + f.getName());
 				try {
 					Object field = f.get(obj);
-					System.out.print(" = " + format_class_name(field.getClass()) + "@" + String.format("%08x", field.hashCode()));
+					System.out.print(" = " + format_class_name(field.getClass(), new integer()));
+					if(recursive && !f.getType().isArray()) {
+						System.out.print("@" + String.format("%08x", field.hashCode()) + "\n");
+						inspectClass(field.getClass(), field, recursive, depth+1);
+					} else if(f.getType().isArray()) {
+						System.out.print("[" + Array.getLength(field) + "]\n");
+						this.print_array(field, depth+1, recursive);
+					} else {
+						System.out.print("@" + String.format("%08x", field.hashCode()) + "\n");
+					}
 				} catch(NullPointerException e) {
-					System.out.print(" = null");
-				} catch(IllegalArgumentException | IllegalAccessException e) {}
+					System.out.print(" = null\n");
+				} catch(IllegalArgumentException | IllegalAccessException e) {
+					System.out.print("\n");
+				}
 			} else {
 				System.out.print(f.getType() + " " + f.getName());
 				try {
 					Object field = f.get(obj);
-					System.out.print(" = " + field.toString());
+					System.out.print(" = " + field.toString() + "\n");
 				} catch(NullPointerException e) {
-					System.out.print(" = null");
-				} catch(IllegalArgumentException | IllegalAccessException e) {}
-			}
-			System.out.print("\n");
-			if(f.getType().isPrimitive()) continue;
-			try {
-				this.add_objects(f.get(obj));
-			} catch(IllegalAccessException e) {}
-		}
-		
-		//recursivly print superclasses
-		if(c.getSuperclass() != null) {
-			this.print_fields(c.getSuperclass(), obj, false);
-		}
-		
-		//recursivly checks out interfaces
-		for(Class enterface : c.getInterfaces()) {
-			this.print_fields(enterface, obj, false);
-		}
-	}
-	
-	public void add_objects(Object obj) {
-		if(obj == null) return;
-		if(obj.getClass().isArray()) {
-			for(int i = 0; i < Array.getLength(obj); i++) {
-				this.add_objects(Array.get(obj, i));
-			}
-		} else {
-			if(obj != null) {
-				explore.add(obj);
+					System.out.print(" = null\n");
+				} catch(IllegalArgumentException | IllegalAccessException e) {
+					System.out.print("\n");
+				}
 			}
 		}
 	}
@@ -196,16 +217,19 @@ public class Inspector {
 	 * 
 	 * @param c	The class to print
 	 */
-	public void print_constructors(Class c) {
+	public void print_constructors(Class c, int depth) {
 		//constructors
 		for(Constructor t : c.getDeclaredConstructors()) {
-			System.out.print("\t" + Modifier.toString(t.getModifiers()) + " " + t.getName() + "(");
+			for(int  i = 0; i < depth; i++) {
+				System.out.print("\t");
+			}
+			System.out.print(Modifier.toString(t.getModifiers()) + " " + t.getName() + "(");
 			boolean loop_start = true;
 			for(Class parameter : t.getParameterTypes()) {
 				if(!loop_start) {
 					System.out.print(", ");
 				}
-				System.out.print(this.format_class_name(parameter));
+				System.out.print(this.format_class_name(parameter, new integer()));
 				loop_start = false;
 			}
 			System.out.print(")\n");
@@ -217,12 +241,14 @@ public class Inspector {
 	 * 
 	 * @param c	The class to print
 	 */
-	public void print_methods(Class c, boolean initial_run) {
+	public void print_methods(Class c, int depth) {
 		//methods
 		for(Method method : c.getDeclaredMethods()) {
-			if(!initial_run && Modifier.isPrivate(method.getModifiers())) continue;
 			//name, modifiers, return type
-			System.out.print("\t" + Modifier.toString(method.getModifiers()) + " " + method.getReturnType().getName() + " " + method.getName() + "(");
+			for(int  i = 0; i < depth; i++) {
+				System.out.print("\t");
+			}
+			System.out.print(Modifier.toString(method.getModifiers()) + " " + method.getReturnType().getName() + " " + method.getName() + "(");
 			
 			//parameters
 			boolean loop_start = true;
@@ -230,7 +256,7 @@ public class Inspector {
 				if(!loop_start) {
 					System.out.print(", ");
 				}
-				System.out.print(this.format_class_name(parameter));
+				System.out.print(this.format_class_name(parameter, new integer()));
 				loop_start = false;
 			}
 			System.out.print(")");
@@ -247,15 +273,6 @@ public class Inspector {
 				loop_start = false;
 			}
 			System.out.print("\n");
-		}
-		//recursivly print superclasses
-		if(c.getSuperclass() != null) {
-			this.print_methods(c.getSuperclass(), false);
-		}
-		
-		//recursivly checks out interfaces
-		for(Class enterface : c.getInterfaces()) {
-			this.print_methods(enterface, false);
 		}
 	}
 
@@ -279,6 +296,7 @@ public class Inspector {
 
 class integer {
 	public int i;
+	public integer() { i = 0; }
 	public integer(int i) {
 		this.i = i;
 	}
