@@ -144,14 +144,21 @@ public class Inspector {
 				for(int j = 0; j < depth; j++) {
 					System.out.print("\t");
 				}
+				System.out.print(i + ") ");
 				try {
 					Object element = Array.get(obj, i);
+					integer myint = new integer();
 					if(element.getClass().isPrimitive()) {
 						System.out.print(element + "\n");
 					} else {
-						System.out.print(element.getClass().getName() + "@" + String.format("%08x", element.hashCode()) + "\n");
-						if(recursive) {
-							inspectClass(element.getClass(), element, recursive, depth+1);
+						if(element.getClass().isArray()) {
+							System.out.print(this.format_class_name(element.getClass(), myint) + "[" + Array.getLength(element) + "]" + "\n");
+							print_array(element, depth+1, recursive);
+						} else {
+							System.out.print(this.format_class_name(element.getClass(), myint) + "@" + String.format("%08x", element.hashCode()) + "\n");
+							if(recursive) {
+								inspectClass(element.getClass(), element, recursive, depth+1);
+							}
 						}
 					}
 				} catch(NullPointerException e) {
