@@ -64,6 +64,7 @@ public class OtherDriver {
 		Method inspect = null;
 		try {
 			inspect = inspect_class.getDeclaredMethod("inspect", new Object().getClass(), Boolean.TYPE);
+			inspect.setAccessible(true);
 		} catch(NoSuchMethodException e) {
 			System.out.print(args[0] + " has no inspect method\n");
 			System.exit(0);

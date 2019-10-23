@@ -65,7 +65,9 @@ public class Inspector {
 		for(int  i = 0; i < depth; i++) {
 			System.out.print("\t");
 		}
-		System.out.print(Modifier.toString(c.getModifiers()) + " ");
+		if(c.getModifiers() != 0) {
+			System.out.print(Modifier.toString(c.getModifiers()) + " ");
+		}
 		if(c.isInterface()) {//if I just do toString, "interface" prints twice
 			System.out.print(c.getName());
 		} else {
@@ -181,7 +183,9 @@ public class Inspector {
 			for(int  i = 0; i < depth; i++) {
 				System.out.print("\t");
 			}
-			System.out.print(Modifier.toString(f.getModifiers()) + " ");
+			if(f.getModifiers() != 0) {
+				System.out.print(Modifier.toString(f.getModifiers()) + " ");
+			}
 			if(!f.getType().isPrimitive()) {
 				integer array_depth = new integer(0);
 				System.out.print(this.format_class_name(f.getType(), array_depth));
@@ -231,7 +235,10 @@ public class Inspector {
 			for(int  i = 0; i < depth; i++) {
 				System.out.print("\t");
 			}
-			System.out.print(Modifier.toString(t.getModifiers()) + " " + t.getName() + "(");
+			if(t.getModifiers() != 0) {
+				System.out.print(Modifier.toString(t.getModifiers()) + " ");
+			}
+			System.out.print(t.getName() + "(");
 			boolean loop_start = true;
 			for(Class parameter : t.getParameterTypes()) {
 				if(!loop_start) {
@@ -252,11 +259,15 @@ public class Inspector {
 	public void print_methods(Class c, int depth) {
 		//methods
 		for(Method method : c.getDeclaredMethods()) {
+			method.setAccessible(true);
 			//name, modifiers, return type
 			for(int  i = 0; i < depth; i++) {
 				System.out.print("\t");
 			}
-			System.out.print(Modifier.toString(method.getModifiers()) + " " + method.getReturnType().getName() + " " + method.getName() + "(");
+			if(method.getModifiers() != 0) {
+				System.out.print(Modifier.toString(method.getModifiers()) + " ");
+			}
+			System.out.print(method.getReturnType().getName() + " " + method.getName() + "(");
 			
 			//parameters
 			boolean loop_start = true;
