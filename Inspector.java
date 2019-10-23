@@ -177,6 +177,7 @@ public class Inspector {
 	public void print_fields(Class c, Object obj, int depth, boolean recursive) {
 		//fields
 		for(Field f : c.getDeclaredFields()) {
+			f.setAccessible(true);
 			for(int  i = 0; i < depth; i++) {
 				System.out.print("\t");
 			}
