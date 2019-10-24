@@ -12,6 +12,13 @@ public class Inspector {
      */
     public void inspect(Object obj, boolean recursive) {
         Class c = obj.getClass();
+        
+		if(c.isArray()) {
+			System.out.print(this.format_class_name(c, false) + "[" + Array.getLength(obj) + "]" + "\n");
+			this.print_array(obj, 1, recursive);
+			return;
+		}
+		
         inspectClass(c, obj, recursive, 0);
     }
 
@@ -24,16 +31,6 @@ public class Inspector {
 	 * @param depth	How far down this method recursed
 	 */
     private void inspectClass(Class c, Object obj, boolean recursive, int depth) {
-		
-		if(c.isPrimitive()) {
-			System.out.print(obj + "\n");
-			return;
-		}
-		if(c.isArray()) {
-			System.out.print(this.format_class_name(c, false) + "[" + Array.getLength(obj) + "]" + "\n");
-			this.print_array(obj, depth+1, recursive);
-			return;
-		}
 		
 		this.print_title(c, obj, depth);
 		
@@ -185,23 +182,6 @@ public class Inspector {
 	}
 	
 	/**
-	 * Returns true if the class type is a primitive wrapper because auto-boxing is a thing
-	 * 
-	 * @param c	The class to check
-	 * @return	True if it's a primitive wrapper
-	 */
-	public boolean isWrapperType(Class<?> c) {
-		return c.equals(Boolean.class) || 
-			c.equals(Integer.class) ||
-			c.equals(Character.class) ||
-			c.equals(Byte.class) ||
-			c.equals(Short.class) ||
-			c.equals(Double.class) ||
-			c.equals(Long.class) ||
-			c.equals(Float.class);
-	}
-	
-	/**
 	 * Prints the elements of an array
 	 * 
 	 * @param obj	The array
@@ -217,7 +197,7 @@ public class Inspector {
 				System.out.print(i + ")\t");
 				try {
 					Object element = Array.get(obj, i);
-					if(isWrapperType(element.getClass())) {
+					if(!obj.getClass().getName().contains("L")) {
 						System.out.print(element + "\n");
 					} else {
 						if(element.getClass().isArray()) {
@@ -370,7 +350,7 @@ public class Inspector {
 	public static void main(String args[]) {
 		try {
 			//new Inspector().inspect(Class.forName(args[0]).newInstance(), true);
-			new Inspector().inspect("Test String", true);
+			new Inspector().inspect("Test String", false);
 		} catch(Exception e) {
 			e.printStackTrace();
 			//System.out.print("Could not find class\n");
