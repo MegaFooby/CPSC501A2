@@ -40,7 +40,7 @@ public class Inspector {
 		
 		if(c.getDeclaredConstructors().length != 0) {
 			for(int  i = 0; i < depth; i++) {
-				System.out.print("\t");private void inspectClass(Class c, Object obj, boolean recursive, int depth)
+				System.out.print("\t");
 			}
 			System.out.print("Constructors:\n");
 			this.print_constructors(c, depth);
@@ -113,10 +113,21 @@ public class Inspector {
 	 * Mostly for arrays
 	 * 
 	 * @param c	The class to format the name of
-	 * @param array_depth	Returns the dimentions of the array
 	 * @return	The formatted name
 	 */
-	public String format_class_name(Class c, integer array_depth) {
+	public String format_class_name(Class c) {
+		return format_class_name(c, true);
+	}
+	
+	/**
+	 * Formats the name of the class
+	 * Mostly for arrays
+	 * 
+	 * @param c	The class to format the name of
+	 * @param brackets	Print the brackets if it's an array
+	 * @return	The formatted name
+	 */
+	public String format_class_name(Class c, boolean brackets) {
 		String ret = "";
 		if(c.getName().charAt(0) == '[') {
 			int depth = 0;
@@ -154,10 +165,9 @@ public class Inspector {
 				ret += "boolean";
 				break;
 			}
-			/*for(int i = 0; i < depth; i++) {
+			for(int i = 0; brackets && i < depth; i++) {
 				ret += "[]";
-			}*/
-			array_depth.i = depth;
+			}
 			return ret;
 		} else {
 			return c.getName();
@@ -180,15 +190,14 @@ public class Inspector {
 				System.out.print(i + ") ");
 				try {
 					Object element = Array.get(obj, i);
-					integer myint = new integer();
 					if(element.getClass().isPrimitive()) {
 						System.out.print(element + "\n");
 					} else {
 						if(element.getClass().isArray()) {
-							System.out.print(this.format_class_name(element.getClass(), myint) + "[" + Array.getLength(element) + "]" + "\n");
+							System.out.print(this.format_class_name(element.getClass(), false) + "[" + Array.getLength(element) + "]" + "\n");
 							print_array(element, depth+1, recursive);
 						} else {
-							System.out.print(this.format_class_name(element.getClass(), myint) + "@" + String.format("%08x", element.hashCode()) + "\n");
+							System.out.print(this.format_class_name(element.getClass()) + "@" + String.format("%08x", element.hashCode()) + "\n");
 							if(recursive) {
 								inspectClass(element.getClass(), element, recursive, depth+1);
 							}
@@ -220,15 +229,11 @@ public class Inspector {
 				System.out.print(Modifier.toString(f.getModifiers()) + " ");
 			}
 			if(!f.getType().isPrimitive()) {
-				integer array_depth = new integer(0);
-				System.out.print(this.format_class_name(f.getType(), array_depth));
-				for(int i = 0; i < array_depth.i; i++) {
-					System.out.print("[]");
-				}
+				System.out.print(this.format_class_name(f.getType()));
 				System.out.print(" " + f.getName());
 				try {
 					Object field = f.get(obj);
-					System.out.print(" = " + format_class_name(field.getClass(), new integer()));
+					System.out.print(" = " + format_class_name(field.getClass(), false));
 					if(recursive && !f.getType().isArray()) {
 						System.out.print("@" + String.format("%08x", field.hashCode()) + "\n");
 						inspectClass(field.getClass(), field, recursive, depth+1);
@@ -278,7 +283,7 @@ public class Inspector {
 				if(!loop_start) {
 					System.out.print(", ");
 				}
-				System.out.print(this.format_class_name(parameter, new integer()));
+				System.out.print(this.format_class_name(parameter));
 				loop_start = false;
 			}
 			System.out.print(")\n");
@@ -310,7 +315,7 @@ public class Inspector {
 				if(!loop_start) {
 					System.out.print(", ");
 				}
-				System.out.print(this.format_class_name(parameter, new integer()));
+				System.out.print(this.format_class_name(parameter));
 				loop_start = false;
 			}
 			System.out.print(")");
@@ -346,15 +351,4 @@ public class Inspector {
 		}
 	}
 
-}
-
-/**
- * A class to retrieve an int from a method that already has a return type
- */
-class integer {
-	public int i;
-	public integer() { i = 0; }
-	public integer(int i) {
-		this.i = i;
-	}
 }

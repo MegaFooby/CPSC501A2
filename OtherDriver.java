@@ -88,6 +88,7 @@ public class OtherDriver {
 			System.exit(0);
 		} catch(InvocationTargetException e) {
 			System.out.print("Inspect method threw an exception\n");
+			e.printStackTrace();
 			System.exit(0);
 		}
 	}
