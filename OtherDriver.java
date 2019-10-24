@@ -8,7 +8,7 @@ public class OtherDriver {
 			System.exit(0);
 		}
 		
-		Class inspect_class = null;
+		Class<?> inspect_class = null;
 		try {
 			inspect_class = Class.forName(args[0]);
 		} catch(ClassNotFoundException e) {

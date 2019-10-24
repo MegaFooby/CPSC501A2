@@ -4,11 +4,25 @@ import java.util.*;
 
 public class Inspector {
     
+    /**
+     * An inspection method to inspect java objects
+     * 
+     * @param obj	The object to inspect
+     * @param recursive	True if you want to explore classes that are fields in obj
+     */
     public void inspect(Object obj, boolean recursive) {
         Class c = obj.getClass();
         inspectClass(c, obj, recursive, 0);
     }
 
+	/**
+	 * The recursive part of the inspect method
+	 * 
+	 * @param c	The class of the object
+	 * @param obj	The object
+	 * @param recursive	Recursively explore fields
+	 * @param depth	How far down this method recursed
+	 */
     private void inspectClass(Class c, Object obj, boolean recursive, int depth) {
 		
 		this.print_title(c, obj, depth);
@@ -26,7 +40,7 @@ public class Inspector {
 		
 		if(c.getDeclaredConstructors().length != 0) {
 			for(int  i = 0; i < depth; i++) {
-				System.out.print("\t");
+				System.out.print("\t");private void inspectClass(Class c, Object obj, boolean recursive, int depth)
 			}
 			System.out.print("Constructors:\n");
 			this.print_constructors(c, depth);
@@ -56,9 +70,11 @@ public class Inspector {
     }
     
     /**
-     * Prints the name, modifiers, interfaces, and superclass of the specified class
+     * Prints the name, modifiers, interfaces, and superclass of the specified class and the objects hashcode
      * 
      * @param c	The class to inspect
+     * @param obj	The object
+	 * @param depth	How far down this method recursed
      */
     public void print_title(Class c, Object obj, int depth) {
 		//Declaring class
@@ -92,6 +108,14 @@ public class Inspector {
 		System.out.print("\n");
 	}
 	
+	/**
+	 * Formats the name of the class
+	 * Mostly for arrays
+	 * 
+	 * @param c	The class to format the name of
+	 * @param array_depth	Returns the dimentions of the array
+	 * @return	The formatted name
+	 */
 	public String format_class_name(Class c, integer array_depth) {
 		String ret = "";
 		if(c.getName().charAt(0) == '[') {
@@ -140,6 +164,13 @@ public class Inspector {
 		}
 	}
 	
+	/**
+	 * Prints the elements of an array
+	 * 
+	 * @param obj	The array
+	 * @param depth	The depth to print at
+	 * @param recursive	Explores the elements in the array
+	 */
 	public void print_array(Object obj, int depth, boolean recursive) {
 		try {
 			for(int i = 0; i < Array.getLength(obj); i++) {
@@ -175,6 +206,8 @@ public class Inspector {
 	 * 
 	 * @param c	The class to print
 	 * @param obj	The object with the values
+	 * @param depth	The depth to print at
+	 * @param recursive	Explores the fields recursively
 	 */
 	public void print_fields(Class c, Object obj, int depth, boolean recursive) {
 		//fields
@@ -228,6 +261,7 @@ public class Inspector {
 	 * Prints all constructors
 	 * 
 	 * @param c	The class to print
+	 * @param depth	The depth to print at
 	 */
 	public void print_constructors(Class c, int depth) {
 		//constructors
@@ -255,6 +289,7 @@ public class Inspector {
 	 * Prints all methods from a class
 	 * 
 	 * @param c	The class to print
+	 * @param depth	The depth to print at
 	 */
 	public void print_methods(Class c, int depth) {
 		//methods
@@ -313,6 +348,9 @@ public class Inspector {
 
 }
 
+/**
+ * A class to retrieve an int from a method that already has a return type
+ */
 class integer {
 	public int i;
 	public integer() { i = 0; }
