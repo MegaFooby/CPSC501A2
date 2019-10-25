@@ -96,7 +96,7 @@ public class Inspector {
 		} else {
 			System.out.print(c.toString());
 		}
-		System.out.print("@" + String.format("%08x", obj.hashCode()));
+		System.out.print(" @" + String.format("%08x", obj.hashCode()));
 		//interfaces
 		boolean loop_start = true;
 		for(Class enterface : c.getInterfaces()) {
@@ -204,7 +204,7 @@ public class Inspector {
 							System.out.print(this.format_class_name(element.getClass(), false) + "[" + Array.getLength(element) + "]" + "\n");
 							print_array(element, depth+1, recursive);
 						} else {
-							System.out.print(this.format_class_name(element.getClass()) + "@" + String.format("%08x", element.hashCode()) + "\n");
+							System.out.print(this.format_class_name(element.getClass()) + " @" + String.format("%08x", element.hashCode()) + "\n");
 							if(recursive) {
 								inspectClass(element.getClass(), element, recursive, depth+1);
 							}
@@ -242,13 +242,13 @@ public class Inspector {
 					Object field = f.get(obj);
 					System.out.print(" = " + format_class_name(field.getClass(), false));
 					if(recursive && !f.getType().isArray()) {
-						System.out.print("@" + String.format("%08x", field.hashCode()) + "\n");
+						System.out.print(" @" + String.format("%08x", field.hashCode()) + "\n");
 						inspectClass(field.getClass(), field, recursive, depth+1);
 					} else if(f.getType().isArray()) {
 						System.out.print("[" + Array.getLength(field) + "]\n");
 						this.print_array(field, depth+1, recursive);
 					} else {
-						System.out.print("@" + String.format("%08x", field.hashCode()) + "\n");
+						System.out.print(" @" + String.format("%08x", field.hashCode()) + "\n");
 					}
 				} catch(NullPointerException e) {
 					System.out.print(" = null\n");

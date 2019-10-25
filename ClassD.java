@@ -1,10 +1,10 @@
 
 public class ClassD {
 
-    public ClassA val = new ClassA(17);
-    public static ClassA val2;
-    public int val3 = 34;
-    public ClassA[] vallarray = new ClassA[10];
+    private ClassA val = new ClassA(17);
+    private static ClassA val2;
+    private int val3 = 34;
+    private ClassA[] vallarray = new ClassA[10];
 
     public ClassD() {
     }
